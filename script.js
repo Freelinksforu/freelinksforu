@@ -148,3 +148,50 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial catalog state
   filterMovies();
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.querySelector(
+    'input[type="search"], input[placeholder*="Search" i], input[aria-label*="Search" i]'
+  );
+
+  const movieCards = document.querySelectorAll(
+    ".movie-card, .film-card, .catalog-card, [data-category]"
+  );
+
+  const filterButtons = document.querySelectorAll("[data-filter]");
+  let activeFilter = "all";
+
+  function filterMovies() {
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+    movieCards.forEach(function (card) {
+      const text = card.textContent.toLowerCase();
+      const category = (card.dataset.category || "all").toLowerCase();
+
+      const matchesSearch = text.includes(query);
+      const matchesFilter =
+        activeFilter === "all" ||
+        category === activeFilter ||
+        category.includes(activeFilter);
+
+      card.style.display =
+        matchesSearch && matchesFilter ? "" : "none";
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", filterMovies);
+  }
+
+  filterButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      activeFilter = (
+        button.dataset.filter ||
+        button.dataset.category ||
+        "all"
+      ).toLowerCase();
+
+      filterMovies();
+    });
+  });
+});
