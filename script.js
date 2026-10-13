@@ -77,31 +77,41 @@ document.addEventListener("DOMContentLoaded", () => {
       heroTitle?.textContent.replace(/\s+/g, " ") ||
       "Watch Demo";
 
-    videoPlayer.pause();
-    videoPlayer.removeAttribute("src");
-    videoPlayer.load();
+    let videoId = "";
 
-    videoPlayer.src = videoUrl;
+    try {
+      const url = new URL(videoUrl);
+
+      if (url.hostname.includes("dailymotion.com")) {
+        const match = url.pathname.match(/\/(?:embed\/)?video\/([a-zA-Z0-9]+)/);
+        if (match) videoId = match[1];
+      }
+    } catch (error) {
+      // Invalid video URL
+    }
+
+    if (!videoId) {
+      playerNote.textContent =
+        "Please use a valid Dailymotion video link.";
+      videoModal.hidden = false;
+      return;
+    }
+
+    videoPlayer.src =
+      "https://www.dailymotion.com/embed/video/" +
+      encodeURIComponent(videoId) +
+      "?autoplay=1";
+
     playerNote.textContent =
-      "Demo video only. Replace this sample URL with your own authorized MP4 video.";
+      "If the video does not play, check its Dailymotion privacy and embedding settings.";
 
     videoModal.hidden = false;
     document.body.style.overflow = "hidden";
     closeModal.focus();
-
-    const playPromise = videoPlayer.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {
-        playerNote.textContent =
-          "Press Play to start the demo. If it does not work, check the video URL.";
-      });
-    }
   }
 
   function closePlayer() {
-    videoPlayer.pause();
-    videoPlayer.removeAttribute("src");
-    videoPlayer.load();
+    videoPlayer.src = "";
     videoModal.hidden = true;
     document.body.style.overflow = "";
   }
@@ -124,6 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
       closePlayer();
     }
   });
+
 
   // Mobile navigation
   menuToggle.addEventListener("click", () => {
