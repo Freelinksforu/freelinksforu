@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
     videoPlayer.src =
       "https://www.dailymotion.com/embed/video/" +
       encodeURIComponent(videoId) +
-      "?autoplay=1";
+      "?autoplay=0";
 
     playerNote.textContent =
       "If the video does not play, check its Dailymotion privacy and embedding settings.";
