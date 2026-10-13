@@ -1,128 +1,46 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.getElementById("searchInput");
-  const filterBar = document.getElementById("filterBar");
-  const movieGrid = document.getElementById("movieGrid");
-  const resultCount = document.getElementById("resultCount");
-  const emptyState = document.getElementById("emptyState");
-  const movieCards = [...document.querySelectorAll(".movie-card")];
-
-  const videoModal = document.getElementById("videoModal");
-  const videoPlayer = document.getElementById("videoPlayer");
-  const modalTitle = document.getElementById("modalTitle");
-  const playerNote = document.getElementById("playerNote");
-  const closeModal = document.getElementById("closeModal");
-
-  const menuToggle = document.getElementById("menuToggle");
-  const navLinks = document.getElementById("navLinks");
-  const header = document.querySelector(".site-header");
-
-  let activeFilter = "all";
-
-  // Search and category filters
-  function filterMovies() {
-    const searchTerm = searchInput.value.trim().toLowerCase();
-    let visibleCount = 0;
-
-    movieCards.forEach((card) => {
-      const title = (card.dataset.title || "").toLowerCase();
-      const categories = (card.dataset.category || "").toLowerCase();
-      const matchesSearch =
-        title.includes(searchTerm) || categories.includes(searchTerm);
-      const matchesFilter =
-        activeFilter === "all" ||
-        categories.split(/\s+/).includes(activeFilter);
-
-      const visible = matchesSearch && matchesFilter;
-      card.hidden = !visible;
-
-      if (visible) visibleCount++;
-    });
-
-    resultCount.textContent =
-      `${visibleCount} ${visibleCount === 1 ? "title" : "titles"}`;
-    emptyState.hidden = visibleCount !== 0;
-    movieGrid.hidden = visibleCount === 0;
-  }
-
-  searchInput.addEventListener("input", filterMovies);
-
-  filterBar.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-filter]");
-    if (!button) return;
-
-    activeFilter = button.dataset.filter;
-
-    filterBar.querySelectorAll(".filter-chip").forEach((chip) => {
-      const selected = chip === button;
-      chip.classList.toggle("active", selected);
-      chip.setAttribute("aria-pressed", String(selected));
-    });
-
-    filterMovies();
-  });
-
-  // Video player modal
-
-function openPlayer(button) {
-  const videoUrl = button.dataset.play;
-  if (!videoUrl) return;
-
-  let videoId = "";
-
-  try {
-    const url = new URL(videoUrl);
-    const match = url.pathname.match(
-      /\/(?:embed\/)?video\/([a-zA-Z0-9]+)/
-    );
-
-    if (match) videoId = match[1];
-
-    if (!videoId && url.hostname === "dai.ly") {
-      videoId = url.pathname.replace(/^\/+/, "");
-    }
-  } catch (error) {
-    // Invalid video URL
-  }
-
-  const watchUrl = videoId
-    ? "https://www.dailymotion.com/video/" + videoId
-    : videoUrl;
-
-  window.open(watchUrl, "_blank", "noopener,noreferrer");
-}
-document.addEventListener("click", (event) => {
-  const playButton = event.target.closest("[data-play]");
-  if (playButton) {
-    openPlayer(playButton);
-  }
-  });
-
-
-  // Mobile navigation
-  menuToggle.addEventListener("click", () => {
-    const isOpen = navLinks.classList.toggle("open");
-    menuToggle.setAttribute("aria-expanded", String(isOpen));
-  });
-
-  navLinks.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => {
-      navLinks.classList.remove("open");
-      menuToggle.setAttribute("aria-expanded", "false");
-    });
-  });
-
-  // On mobile, tap the search area through this shortcut if needed.
-  // Keep the desktop search visible; mobile users can use browser find
-  // until a dedicated mobile search toggle is added.
-
-  // Current copyright year
-  document.getElementById("year").textContent = new Date().getFullYear();
-
-  // Initial catalog state
-  filterMovies();
-});
 
 document.addEventListener("DOMContentLoaded", function () {
+  // -----------------------------
+  // Copyright year
+  // -----------------------------
+  const yearElement = document.getElementById("year");
+
+  if (yearElement) {
+    yearElement.textContent = new Date().getFullYear();
+  }
+
+  // -----------------------------
+  // Mobile navigation
+  // -----------------------------
+  const menuToggle = document.querySelector(
+    "#menuToggle, #menu-toggle, .menu-toggle, [data-menu-toggle]"
+  );
+
+  const navMenu = document.querySelector(
+    "#navLinks, #nav-links, .nav-links, .nav-menu, nav"
+  );
+
+  if (menuToggle && navMenu) {
+    menuToggle.addEventListener("click", function () {
+      const isOpen =
+        menuToggle.getAttribute("aria-expanded") === "true";
+
+      menuToggle.setAttribute("aria-expanded", String(!isOpen));
+      navMenu.classList.toggle("active", !isOpen);
+      navMenu.classList.toggle("open", !isOpen);
+    });
+
+    navMenu.querySelectorAll("a").forEach(function (link) {
+      link.addEventListener("click", function () {
+        menuToggle.setAttribute("aria-expanded", "false");
+        navMenu.classList.remove("active", "open");
+      });
+    });
+  }
+
+  // -----------------------------
+  // Movie search and category filters
+  // -----------------------------
   const searchInput = document.querySelector(
     'input[type="search"], input[placeholder*="Search" i], input[aria-label*="Search" i]'
   );
@@ -132,16 +50,22 @@ document.addEventListener("DOMContentLoaded", function () {
   );
 
   const filterButtons = document.querySelectorAll("[data-filter]");
+
   let activeFilter = "all";
 
   function filterMovies() {
-    const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    const query = searchInput
+      ? searchInput.value.trim().toLowerCase()
+      : "";
 
     movieCards.forEach(function (card) {
       const text = card.textContent.toLowerCase();
-      const category = (card.dataset.category || "all").toLowerCase();
+      const category = (
+        card.dataset.category || "all"
+      ).toLowerCase();
 
       const matchesSearch = text.includes(query);
+
       const matchesFilter =
         activeFilter === "all" ||
         category === activeFilter ||
@@ -164,7 +88,87 @@ document.addEventListener("DOMContentLoaded", function () {
         "all"
       ).toLowerCase();
 
+      filterButtons.forEach(function (item) {
+        item.classList.toggle("active", item === button);
+      });
+
       filterMovies();
     });
+  });
+
+  filterMovies();
+
+  // -----------------------------
+  // Dailymotion video links
+  // Open videos in a new browser tab
+  // -----------------------------
+  function getWatchUrl(videoUrl) {
+    try {
+      const url = new URL(videoUrl);
+      const host = url.hostname.toLowerCase();
+
+      if (
+        host === "dai.ly" ||
+        host === "www.dai.ly"
+      ) {
+        const id = url.pathname.replace(/^\/+|\/+$/g, "");
+
+        if (id) {
+          return "https://www.dailymotion.com/video/" + id;
+        }
+      }
+
+      if (
+        host === "dailymotion.com" ||
+        host.endsWith(".dailymotion.com")
+      ) {
+        const match = url.pathname.match(
+          /\/(?:embed\/)?video\/([a-zA-Z0-9]+)/
+        );
+
+        if (match) {
+          return "https://www.dailymotion.com/video/" + match[1];
+        }
+      }
+
+      return url.href;
+    } catch (error) {
+      return "";
+    }
+  }
+
+  document.addEventListener("click", function (event) {
+    const target = event.target;
+
+    if (!target || typeof target.closest !== "function") {
+      return;
+    }
+
+    const playButton = target.closest("[data-play]");
+
+    if (!playButton) {
+      return;
+    }
+
+    const videoUrl = playButton.dataset.play;
+
+    if (!videoUrl) {
+      return;
+    }
+
+    const watchUrl = getWatchUrl(videoUrl);
+
+    if (!watchUrl) {
+      console.error("Invalid video URL:", videoUrl);
+      return;
+    }
+
+    event.preventDefault();
+
+    window.open(
+      watchUrl,
+      "_blank",
+      "noopener,noreferrer"
+    );
   });
 });
