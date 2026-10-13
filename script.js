@@ -95,8 +95,6 @@ document.addEventListener("click", (event) => {
   if (playButton) {
     openPlayer(playButton);
   }
-});
-  
   });
 
 
