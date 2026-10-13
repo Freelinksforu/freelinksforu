@@ -62,77 +62,35 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Video player modal
-  function openPlayer(button) {
-    const videoUrl = button.dataset.play;
-    if (!videoUrl) return;
 
-    const card = button.closest(".movie-card");
-    const titleElement = card?.querySelector(".card-details h3");
-    const episodeTitle = button.querySelector("strong");
-    const heroTitle = document.querySelector(".hero h1");
+function openPlayer(button) {
+  const videoUrl = button.dataset.play;
+  if (!videoUrl) return;
 
-    modalTitle.textContent =
-      titleElement?.textContent ||
-      episodeTitle?.textContent ||
-      heroTitle?.textContent.replace(/\s+/g, " ") ||
-      "Watch Demo";
+  let videoId = "";
 
-    let videoId = "";
+  try {
+    const url = new URL(videoUrl);
+    const match = url.pathname.match(
+      /\/(?:embed\/)?video\/([a-zA-Z0-9]+)/
+    );
 
-    try {
-      const url = new URL(videoUrl);
+    if (match) videoId = match[1];
 
-      if (url.hostname.includes("dailymotion.com")) {
-        const match = url.pathname.match(/\/(?:embed\/)?video\/([a-zA-Z0-9]+)/);
-        if (match) videoId = match[1];
-      }
-    } catch (error) {
-      // Invalid video URL
+    if (!videoId && url.hostname === "dai.ly") {
+      videoId = url.pathname.replace(/^\/+/, "");
     }
-
-    if (!videoId) {
-      playerNote.textContent =
-        "Please use a valid Dailymotion video link.";
-      videoModal.hidden = false;
-      return;
-    }
-
-    videoPlayer.src =
-      "https://www.dailymotion.com/embed/video/" +
-      encodeURIComponent(videoId) +
-      "?autoplay=0";
-
-    playerNote.textContent =
-      "If the video does not play, check its Dailymotion privacy and embedding settings.";
-
-    videoModal.hidden = false;
-    document.body.style.overflow = "hidden";
-    closeModal.focus();
+  } catch (error) {
+    // Invalid video URL
   }
 
-  function closePlayer() {
-    videoPlayer.src = "";
-    videoModal.hidden = true;
-    document.body.style.overflow = "";
-  }
+  const watchUrl = videoId
+    ? "https://www.dailymotion.com/video/" + videoId
+    : videoUrl;
 
-  document.addEventListener("click", (event) => {
-    const playButton = event.target.closest("[data-play]");
-    if (playButton) {
-      openPlayer(playButton);
-    }
-  });
+  window.open(watchUrl, "_blank", "noopener,noreferrer");
+}
 
-  closeModal.addEventListener("click", closePlayer);
-
-  videoModal.querySelectorAll("[data-close-modal]").forEach((element) => {
-    element.addEventListener("click", closePlayer);
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !videoModal.hidden) {
-      closePlayer();
-    }
   });
 
 
