@@ -90,7 +90,13 @@ function openPlayer(button) {
 
   window.open(watchUrl, "_blank", "noopener,noreferrer");
 }
-
+document.addEventListener("click", (event) => {
+  const playButton = event.target.closest("[data-play]");
+  if (playButton) {
+    openPlayer(playButton);
+  }
+});
+  
   });
 
 
